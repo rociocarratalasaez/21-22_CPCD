@@ -95,7 +95,7 @@ if rank==0:
     
     m=2*n
 
-    C=[0]*(n*n)
+    C=[0]*(m*m)
 
     for i in range(0,n):
         for j in range(0,n):
