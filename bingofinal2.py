@@ -5,7 +5,6 @@ Created on Mon Jun 20 01:50:15 2022
 
 @author: guillermomarquinez
 """
-
 import mpi4py
 mpi4py.rc.initialize = False # do not initialize
 # MPI automatically
@@ -13,10 +12,7 @@ mpi4py.rc.finalize = False # do not finalize MPI
 # automatically
 from mpi4py import MPI # import the 'MPI'
 import random
-import multiprocessing
-from multiprocessing import Process, Array
-from multiprocessing import Pool
-import time
+
 
 #Función para crear una planilla aleatoria
 def planilla(n):
@@ -26,9 +22,10 @@ def planilla(n):
         while x in A:
             x=random.randint(0,99)
         A.append(x)
+        A.sort()
     return A
 
-#Función para crear todas las planillas y cerciorarse de que no se repitan
+#Función para crear todas las planillas y comprobar que no se repitan
 def planillas(num_jug, n):
     A=[0]
     for i in range (1,num_jug):
@@ -69,6 +66,7 @@ if rank==0:
     contador=0
     Bingo=0
     victoria=0
+    texto_plantilla="Soy la mesa y he dado a cada jugador su plantilla para jugar, el Bingo empezará pronto"
     com.Barrier()
 
 
@@ -84,11 +82,17 @@ for i in range(1,size):
         com.Barrier()
 plantilla=com.scatter(A,root=0)
 
-
+#Cada jugador dice cuál es su plantilla (debería ser privado, 
+#pero así se puede comprobar que el resultado del bingo es el correcto)
 for i in range(1,size):
     if rank==i:
-        print("Soy el jugador "+str(rank)+ " y tengo la planilla "+str(plantilla))    
+        texto_plantilla="Soy el jugador "+str(rank)+ " y tengo la planilla "+str(plantilla)
+        
+texto_plan=com.gather(texto_plantilla,root=0)
 
+if rank==0:
+    for i in range(len(texto_plan)):
+        print(texto_plan[i])
 
 
 for i in range(0,100):
@@ -114,18 +118,29 @@ for i in range(0,100):
 for i in range(1,size):
     if rank==i:
         if contador==10:
-            print("Soy el jugador"+ str(rank)+ "y he ganado.")
+            text="Soy el jugador"+ str(rank)+ "y he ganado."
             victoria=1
+
         else:
-            print("Soy el jugador"+str(rank)+ "y he perdido")
+            text="Soy el jugador"+str(rank)+ "y he perdido."
             victoria=0
 
 result=com.gather(victoria, root=0)
+
 if rank==0:
-    print("El bombo ha sacado los siguientes números :"+str(Bombo))
+    print("El bombo ha sacado los números :" +str(Bombo))
     for i in range(1,size):
         if result[i]==1:
-            print("Soy la mesa y ha ganado el jugador "+str(i))
+            text="Soy la mesa y ha ganado el jugador "+str(i)
+texto=com.gather(text,root=0)
+if rank==0:
+    print(texto[0])
+    for i in range(1,size):
+        if result[i]==1:
+            print(texto[i])
+    for i in range(1,size):
+        if result[i]==0:
+            print(texto[i])
 
 
 
