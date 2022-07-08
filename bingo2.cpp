@@ -30,7 +30,7 @@ void fillList(int* data, int n, int range)
             int num = rand() % range;
             int duplic = 0;
             for(int k = 0; k < j; k++){
-                if(num == data[j]){
+                if(num == data[k]){
                     duplic++;
                 }
             }
